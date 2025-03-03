@@ -6,11 +6,14 @@ import './CreateQuizPage.css';
 const CreateQuizPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [standardCount, setStandardCount] = useState(8);
-  const [assertionReasonCount, setAssertionReasonCount] = useState(2);
+  const [standardCount, setStandardCount] = useState(1);
+  const [assertionReasonCount, setAssertionReasonCount] = useState(1);
   const [selectedChapters, setSelectedChapters] = useState([]);
   const [availableChapters, setAvailableChapters] = useState([]);
+  const [availableStandardCount, setAvailableStandardCount] = useState(0);
+  const [availableAssertionReasonCount, setAvailableAssertionReasonCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCounts, setIsLoadingCounts] = useState(false);
   const [error, setError] = useState(null);
   
   const navigate = useNavigate();
@@ -49,6 +52,42 @@ const CreateQuizPage = () => {
     
     fetchChapters();
   }, [location.search]);
+
+  // Fetch available question counts when chapters change
+  useEffect(() => {
+    const fetchAvailableCounts = async () => {
+      if (selectedChapters.length === 0) {
+        setAvailableStandardCount(0);
+        setAvailableAssertionReasonCount(0);
+        setStandardCount(1);
+        setAssertionReasonCount(1);
+        return;
+      }
+
+      try {
+        setIsLoadingCounts(true);
+        const response = await apiService.getAvailableQuestionCounts(selectedChapters);
+        const counts = response.data.data;
+        setAvailableStandardCount(counts.standardCount);
+        setAvailableAssertionReasonCount(counts.assertionReasonCount);
+
+        // Reset counts if they exceed available counts
+        if (standardCount > counts.standardCount) {
+          setStandardCount(counts.standardCount || 1);
+        }
+        if (assertionReasonCount > counts.assertionReasonCount) {
+          setAssertionReasonCount(counts.assertionReasonCount || 1);
+        }
+      } catch (err) {
+        console.error('Error fetching available counts:', err);
+        setError('Failed to load available question counts. Please try again.');
+      } finally {
+        setIsLoadingCounts(false);
+      }
+    };
+
+    fetchAvailableCounts();
+  }, [selectedChapters]);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,6 +100,16 @@ const CreateQuizPage = () => {
     const totalQuestions = standardCount + assertionReasonCount;
     if (totalQuestions < 1) {
       setError('Total number of questions must be at least 1');
+      return;
+    }
+
+    if (standardCount > availableStandardCount) {
+      setError(`Cannot select more standard questions than available (${availableStandardCount})`);
+      return;
+    }
+
+    if (assertionReasonCount > availableAssertionReasonCount) {
+      setError(`Cannot select more assertion-reason questions than available (${availableAssertionReasonCount})`);
       return;
     }
     
@@ -137,31 +186,61 @@ const CreateQuizPage = () => {
           />
         </div>
         
-        <div className="form-group question-counts">
+        <div className="question-counts">
           <div className="count-input">
             <label htmlFor="standardCount">Number of Standard Questions</label>
-            <input
-              type="number"
-              id="standardCount"
-              value={standardCount}
-              onChange={(e) => setStandardCount(parseInt(e.target.value) || 0)}
-              min="0"
-              max="50"
-              required
-            />
+            {isLoadingCounts ? (
+              <div className="loading-counts">Loading available counts...</div>
+            ) : (
+              <select
+                id="standardCount"
+                value={standardCount}
+                onChange={(e) => setStandardCount(parseInt(e.target.value))}
+                disabled={selectedChapters.length === 0 || availableStandardCount === 0}
+                className="count-select"
+              >
+                {availableStandardCount === 0 ? (
+                  <option value="0">No standard questions available</option>
+                ) : (
+                  Array.from({ length: availableStandardCount }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                  ))
+                )}
+              </select>
+            )}
+            {availableStandardCount > 0 && (
+              <div className="available-count">
+                Available: {availableStandardCount}
+              </div>
+            )}
           </div>
           
           <div className="count-input">
             <label htmlFor="assertionReasonCount">Number of Assertion-Reason Questions</label>
-            <input
-              type="number"
-              id="assertionReasonCount"
-              value={assertionReasonCount}
-              onChange={(e) => setAssertionReasonCount(parseInt(e.target.value) || 0)}
-              min="0"
-              max="50"
-              required
-            />
+            {isLoadingCounts ? (
+              <div className="loading-counts">Loading available counts...</div>
+            ) : (
+              <select
+                id="assertionReasonCount"
+                value={assertionReasonCount}
+                onChange={(e) => setAssertionReasonCount(parseInt(e.target.value))}
+                disabled={selectedChapters.length === 0 || availableAssertionReasonCount === 0}
+                className="count-select"
+              >
+                {availableAssertionReasonCount === 0 ? (
+                  <option value="0">No assertion-reason questions available</option>
+                ) : (
+                  Array.from({ length: availableAssertionReasonCount }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                  ))
+                )}
+              </select>
+            )}
+            {availableAssertionReasonCount > 0 && (
+              <div className="available-count">
+                Available: {availableAssertionReasonCount}
+              </div>
+            )}
           </div>
 
           <div className="total-questions">
