@@ -63,6 +63,7 @@ const apiService = {
   getQuizzes: () => api.get('/quizzes'),
   getQuiz: (id) => api.get(`/quizzes/${id}`),
   getQuizByLink: (link) => api.get(`/quizzes/link/${link}`),
+  getAvailableQuestionCounts: (chapterIds) => api.get('/quizzes/available-counts', { params: { chapters: chapterIds } }),
   
   // Quiz attempt endpoints
   submitQuizAttempt: (attemptData) => api.post('/quiz-attempts', attemptData),

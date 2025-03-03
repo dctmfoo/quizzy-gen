@@ -9,6 +9,85 @@ const Question = require('../models/Question');
 const auth = require('../middleware/auth');
 
 /**
+ * @route   GET /api/v1/quizzes/available-counts
+ * @desc    Get available question counts for selected chapters
+ * @access  Private
+ */
+router.get('/available-counts', auth, async (req, res) => {
+  try {
+    const { chapters } = req.query;
+    
+    if (!chapters || !Array.isArray(chapters) || chapters.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Please select at least one chapter'
+        }
+      });
+    }
+
+    // Count questions by type directly from the Question model
+    const [standardCount, assertionReasonCount] = await Promise.all([
+      Question.countDocuments({ 
+        chapterId: { $in: chapters },
+        type: 'standard'
+      }),
+      Question.countDocuments({ 
+        chapterId: { $in: chapters },
+        type: 'assertion_reason'
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        standardCount,
+        assertionReasonCount
+      }
+    });
+  } catch (error) {
+    console.error('Error getting available question counts:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Error getting available question counts',
+        details: error.message
+      }
+    });
+  }
+});
+
+/**
+ * @route   GET /api/v1/quizzes
+ * @desc    Get all quizzes
+ * @access  Private
+ */
+router.get('/', auth, async (req, res) => {
+  try {
+    const quizzes = await Quiz.find()
+      .populate('chapters', 'chapterNumber title')
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      data: quizzes
+    });
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Error fetching quizzes',
+        details: error.message
+      }
+    });
+  }
+});
+
+/**
  * @route   POST /api/v1/quizzes
  * @desc    Create a new quiz
  * @access  Private
@@ -93,27 +172,37 @@ router.post('/', auth, async (req, res) => {
 });
 
 /**
- * @route   GET /api/v1/quizzes
- * @desc    Get all quizzes
+ * @route   GET /api/v1/quizzes/link/:shareableLink
+ * @desc    Get quiz by shareable link
  * @access  Private
  */
-router.get('/', auth, async (req, res) => {
+router.get('/link/:shareableLink', auth, async (req, res) => {
   try {
-    const quizzes = await Quiz.find()
+    const quiz = await Quiz.findOne({ shareableLink: req.params.shareableLink })
       .populate('chapters', 'chapterNumber title')
-      .sort({ createdAt: -1 });
+      .populate('questions');
+    
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'RESOURCE_NOT_FOUND',
+          message: 'Quiz not found'
+        }
+      });
+    }
     
     res.json({
       success: true,
-      data: quizzes
+      data: quiz
     });
   } catch (error) {
-    console.error('Error fetching quizzes:', error);
+    console.error('Error fetching quiz by link:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Error fetching quizzes',
+        message: 'Error fetching quiz',
         details: error.message
       }
     });
@@ -147,44 +236,6 @@ router.get('/:id', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching quiz:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Error fetching quiz',
-        details: error.message
-      }
-    });
-  }
-});
-
-/**
- * @route   GET /api/v1/quizzes/link/:shareableLink
- * @desc    Get quiz by shareable link
- * @access  Private
- */
-router.get('/link/:shareableLink', auth, async (req, res) => {
-  try {
-    const quiz = await Quiz.findOne({ shareableLink: req.params.shareableLink })
-      .populate('chapters', 'chapterNumber title')
-      .populate('questions');
-    
-    if (!quiz) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'RESOURCE_NOT_FOUND',
-          message: 'Quiz not found'
-        }
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: quiz
-    });
-  } catch (error) {
-    console.error('Error fetching quiz by link:', error);
     res.status(500).json({
       success: false,
       error: {
