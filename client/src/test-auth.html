@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+</head>
+<body>
+    <h1>Auth Test</h1>
+    <button id="storeToken">Store Token</button>
+    <button id="retrieveToken">Retrieve Token</button>
+    <button id="clearToken">Clear Token</button>
+    <div id="output"></div>
+
+    <script>
+        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzQ1ZTBmMDY5Yjg1ZWJmMjVjZjliMSIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImlhdCI6MTc0MDkyMjQzMSwiZXhwIjoxNzQxNTI3MjMxfQ.WTWCCYQ6ofWasLjqdTDHE-DrGkA7w4h3ohjzsV_ied4";
+        const outputDiv = document.getElementById('output');
+        
+        document.getElementById('storeToken').addEventListener('click', () => {
+            localStorage.setItem('adminToken', token);
+            outputDiv.textContent = "Token stored in localStorage";
+        });
+        
+        document.getElementById('retrieveToken').addEventListener('click', () => {
+            const storedToken = localStorage.getItem('adminToken');
+            outputDiv.textContent = storedToken ? `Token retrieved: ${storedToken.substring(0, 20)}...` : "No token found";
+        });
+        
+        document.getElementById('clearToken').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            outputDiv.textContent = "Token cleared from localStorage";
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,89 @@
+.chapters-page {
+  padding: 2rem 0;
+}
+
+.chapters-page h1 {
+  margin-bottom: 0.5rem;
+}
+
+.chapters-page > .container > p {
+  margin-bottom: 2rem;
+  color: #6c757d;
+}
+
+.chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.chapter-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chapter-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chapter-number {
+  display: inline-block;
+  background-color: #007bff;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.chapter-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.chapter-card p {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+.chapter-card .btn {
+  width: 100%;
+}
+
+.loading, .error, .no-chapters {
+  text-align: center;
+  padding: 3rem 0;
+  color: #6c757d;
+}
+
+.error {
+  color: #dc3545;
+}
+
+.cta-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.cta-section h2 {
+  margin-bottom: 0.5rem;
+}
+
+.cta-section p {
+  margin-bottom: 1.5rem;
+  color: #6c757d;
+}
+
+@media (max-width: 768px) {
+  .chapters-grid {
+    grid-template-columns: 1fr;
+  }
+} 
